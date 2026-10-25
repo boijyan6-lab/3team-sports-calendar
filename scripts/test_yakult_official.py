@@ -1,67 +1,80 @@
 #!/usr/bin/env python3
-"""Read-only diagnostic of Yakult's official monthly broadcast/schedule page."""
-from html.parser import HTMLParser
+"""Read-only Yakult official schedule-to-JSON preview. Never changes published data."""
+import json
 import re
 import urllib.request
+from datetime import date
+from html.parser import HTMLParser
 
-URLS = [
-    "https://www.yakult-swallows.co.jp/game/broadcast/202609",
-    "https://www.yakult-swallows.co.jp/game/broadcast/202610",
-]
+URL = 'https://www.yakult-swallows.co.jp/game/broadcast/202610'
 
-class Inspector(HTMLParser):
+class Reader(HTMLParser):
     def __init__(self):
         super().__init__()
-        self.tags = {}
-        self.lines = []
-        self.current = []
+        self.parts = []
+        self.skip = 0
     def handle_starttag(self, tag, attrs):
-        self.tags[tag] = self.tags.get(tag, 0) + 1
-        if tag in ("div", "li", "article", "section", "tr"):
-            self.flush()
-    def handle_data(self, data):
-        text = " ".join(data.split())
-        if text:
-            self.current.append(text)
+        if tag in ('script', 'style'):
+            self.skip += 1
+        if tag in ('div', 'li', 'tr', 'section', 'article', 'p', 'h2', 'h3'):
+            self.parts.append('\n')
     def handle_endtag(self, tag):
-        if tag in ("div", "li", "article", "section", "tr"):
-            self.flush()
-    def flush(self):
-        if self.current:
-            self.lines.append(" ".join(self.current))
-            self.current = []
+        if tag in ('script', 'style') and self.skip:
+            self.skip -= 1
+        if tag in ('div', 'li', 'tr', 'section', 'article', 'p', 'h2', 'h3'):
+            self.parts.append('\n')
+    def handle_data(self, data):
+        if not self.skip and data.strip():
+            self.parts.append(' ' + ' '.join(data.split()) + ' ')
+
+def extract(html):
+    reader = Reader()
+    reader.feed(html)
+    lines = [' '.join(s.split()) for s in ''.join(reader.parts).splitlines()]
+    lines = [s for s in lines if s]
+    found = []
+    # Example observed in live GitHub Actions log:
+    # '10 ・ 2 FRI 2026 JERA セ・リーグ公式戦 神宮', 'vs 巨人', '18:00 試合開始'
+    date_re = re.compile(r'(?<!\d)(\d{1,2})\s*[・./]\s*(\d{1,2})\s+(?:MON|TUE|WED|THU|FRI|SAT|SUN)\s+(20\d{2})\b', re.I)
+    for i, line in enumerate(lines):
+        match = date_re.search(line)
+        if not match:
+            continue
+        month, day, year = map(int, (match.group(1), match.group(2), match.group(3)))
+        try:
+            iso = date(year, month, day).isoformat()
+        except ValueError:
+            continue
+        window = ' '.join(lines[i:i+7])
+        opp = re.search(r'\bvs\s+(巨人|中日|広島|阪神|DeNA|ＤｅＮＡ|横浜|ヤクルト|日本ハム|楽天|西武|ロッテ|オリックス|ソフトバンク)\b', window)
+        start = re.search(r'\b([01]?\d|2[0-3]):([0-5]\d)\s*試合開始', window)
+        if not opp or not start:
+            print('SKIP (incomplete):', iso, window[:180])
+            continue
+        opponent = opp.group(1)
+        if opponent == 'ヤクルト':
+            continue
+        venue = ''
+        for name in ('神宮', '東京ドーム', '横浜', '甲子園', 'マツダ', 'バンテリンドーム', '京セラD大阪', 'ZOZOマリン', 'ベルーナドーム', 'エスコンF', '楽天モバイル', 'PayPayドーム'):
+            if name in line:
+                venue = name
+                break
+        # Home/away cannot safely be inferred from venue for neutral-site games.
+        # This is a PREVIEW, not production calendar data.
+        found.append({'date': iso, 'time': f'{int(start.group(1)):02d}:{start.group(2)}', 'opp': opponent, 'venue': venue, 'source': URL})
+    return list({(e['date'], e['opp']): e for e in found}.values())
 
 def main():
-    success = 0
-    for url in URLS:
-        print("\nURL:", url, flush=True)
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=20) as resp:
-                html = resp.read(3_000_000).decode("utf-8", "replace")
-                print("HTTP:", resp.status, "bytes:", len(html), flush=True)
-            inspector = Inspector()
-            inspector.feed(html)
-            inspector.flush()
-            print("Tag counts:", inspector.tags, flush=True)
-            interesting = [
-                line for line in inspector.lines
-                if ("試合開始" in line or "vs" in line or "2026" in line)
-                and len(line) < 350
-            ]
-            print("Candidate lines:", len(interesting), flush=True)
-            for line in interesting[:35]:
-                print("  ", line[:250], flush=True)
-            if "18:00" in html and ("巨人" in html or "広島" in html):
-                success += 1
-                print("PASS: expected 2026 schedule markers found", flush=True)
-            else:
-                print("WARNING: schedule markers missing; parsing needs review", flush=True)
-        except Exception as exc:
-            print("ERROR:", type(exc).__name__, str(exc), flush=True)
-    if not success:
-        raise RuntimeError("No known monthly schedule could be verified")
-    print("Read-only diagnostic finished. No published files changed.", flush=True)
+    req = urllib.request.Request(URL, headers={'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'ja-JP,ja;q=0.9'})
+    with urllib.request.urlopen(req, timeout=25) as response:
+        html = response.read(3_000_000).decode('utf-8', 'replace')
+        print('HTTP:', response.status, 'HTML characters:', len(html))
+    fixtures = extract(html)
+    print('Parsed fixtures:', len(fixtures))
+    print(json.dumps(fixtures, ensure_ascii=False, indent=2))
+    if not fixtures:
+        raise RuntimeError('No fixture records parsed. Existing site remains unchanged.')
+    print('PREVIEW ONLY: no JSON file or website was modified.')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
