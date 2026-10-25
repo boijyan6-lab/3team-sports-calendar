@@ -74,7 +74,7 @@ def main():
         raise RuntimeError('No confirmed future cup fixtures parsed; existing JSON preserved')
     unique = {(e['date'], e['comp'], e['opp']): e for e in fixtures}
     fixtures = sorted(unique.values(), key=lambda e: (e['date'], e['time']))
-        OUT.write_text(json.dumps(fixtures, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    OUT.write_text(json.dumps(fixtures, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(f'Wrote {len(fixtures)} confirmed future cup fixture(s)')
 
 if __name__ == '__main__':
