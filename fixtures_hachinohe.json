@@ -1,0 +1,112 @@
+[
+  {
+    "date": "2026-10-25",
+    "time": "14:00",
+    "team": "hachinohe",
+    "teamLabel": "八戸",
+    "comp": "Ｊ２ 第１３節第２日",
+    "opp": "鳥栖",
+    "ha": "A",
+    "watch": "ＤＡＺＮ",
+    "venue": "駅スタ"
+  },
+  {
+    "date": "2026-10-31",
+    "time": "14:00",
+    "team": "hachinohe",
+    "teamLabel": "八戸",
+    "comp": "Ｊ２ 第１４節第１日",
+    "opp": "山形",
+    "ha": "H",
+    "watch": "ＤＡＺＮ／ＮＨＫ青森／ＮＨＫ山形",
+    "venue": "プラスタ"
+  },
+  {
+    "date": "2026-11-03",
+    "time": "14:00",
+    "team": "hachinohe",
+    "teamLabel": "八戸",
+    "comp": "Ｊ２ 第１５節第１日",
+    "opp": "大分",
+    "ha": "A",
+    "watch": "ＤＡＺＮ／大分放送",
+    "venue": "クラド"
+  },
+  {
+    "date": "2026-11-08",
+    "time": "13:00",
+    "team": "hachinohe",
+    "teamLabel": "八戸",
+    "comp": "Ｊ２ 第１６節第２日",
+    "opp": "札幌",
+    "ha": "H",
+    "watch": "ＤＡＺＮ",
+    "venue": "プラスタ"
+  },
+  {
+    "date": "2026-11-15",
+    "time": "13:00",
+    "team": "hachinohe",
+    "teamLabel": "八戸",
+    "comp": "Ｊ２ 第１７節第２日",
+    "opp": "いわき",
+    "ha": "H",
+    "watch": "ＤＡＺＮ",
+    "venue": "プラスタ"
+  },
+  {
+    "date": "2026-11-21",
+    "time": "14:00",
+    "team": "hachinohe",
+    "teamLabel": "八戸",
+    "comp": "Ｊ２ 第１８節第１日",
+    "opp": "甲府",
+    "ha": "A",
+    "watch": "ＤＡＺＮ",
+    "venue": "ＪＩＴス"
+  },
+  {
+    "date": "2026-11-25",
+    "time": "18:30",
+    "team": "hachinohe",
+    "teamLabel": "八戸",
+    "comp": "Ｊ２ 第１９節第１日",
+    "opp": "新潟",
+    "ha": "H",
+    "watch": "ＤＡＺＮ",
+    "venue": "プラスタ"
+  },
+  {
+    "date": "2026-11-29",
+    "time": "13:00",
+    "team": "hachinohe",
+    "teamLabel": "八戸",
+    "comp": "Ｊ２ 第２０節第２日",
+    "opp": "藤枝",
+    "ha": "H",
+    "watch": "ＤＡＺＮ",
+    "venue": "プラスタ"
+  },
+  {
+    "date": "2026-12-05",
+    "time": "14:00",
+    "team": "hachinohe",
+    "teamLabel": "八戸",
+    "comp": "Ｊ２ 第２１節第１日",
+    "opp": "横浜FC",
+    "ha": "A",
+    "watch": "ＤＡＺＮ",
+    "venue": "ニッパツ"
+  },
+  {
+    "date": "2026-12-13",
+    "time": "13:00",
+    "team": "hachinohe",
+    "teamLabel": "八戸",
+    "comp": "Ｊ２ 第２２節第２日",
+    "opp": "山形",
+    "ha": "A",
+    "watch": "ＤＡＺＮ／山形放送",
+    "venue": "ＮＤスタ"
+  }
+]
