@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Conservative J.League Data Site Urawa fixture extractor. Writes JSON only on valid data."""
 import json, re, urllib.request
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 
-URL='https://data.j-league.or.jp/SFMS01/search?competition_years=2026&home_away_select=0&team_ids=3'
+URL_TEMPLATE='https://data.j-league.or.jp/SFMS01/search?competition_years={year}&home_away_select=0&team_ids=3'
+JST=timezone(timedelta(hours=9))
 OUT=Path('fixtures_auto.json')
 
 class TableReader(HTMLParser):
@@ -40,7 +41,7 @@ def parse(rows):
         opponent=cells[7] if ha=='H' else cells[5]
         if not opponent or opponent in ('未定','-'): continue
         # Future matches only; already played games do not need automatic insertion.
-        if iso<date.today().isoformat(): continue
+        if iso<datetime.now(JST).date().isoformat(): continue
         broadcast=cells[10] if len(cells)>10 else '未定'
         fixtures.append({'date':iso,'time':f'{int(t.group(1)):02d}:{t.group(2)}',
             'team':'urawa','teamLabel':'浦和','comp':comp+' '+cells[2],
@@ -49,14 +50,32 @@ def parse(rows):
     return sorted({(x['date'],x['comp'],x['opp']):x for x in fixtures}.values(),key=lambda x:x['date'])
 
 def main():
-    req=urllib.request.Request(URL,headers={'User-Agent':'Mozilla/5.0 (compatible; 3team-calendar/1.0)'})
-    with urllib.request.urlopen(req,timeout=30) as res:
-        html=res.read(5_000_000).decode('utf-8','replace')
-    parser=TableReader(); parser.feed(html)
-    if len(parser.rows)<5: raise RuntimeError('Official table not found; previous JSON preserved')
-    fixtures=parse(parser.rows)
-    # A blank result may be legitimate, but should not silently erase previous confirmed fixtures.
-    if not fixtures: raise RuntimeError('No future Urawa cup fixtures parsed; previous JSON preserved')
-    OUT.write_text(json.dumps(fixtures,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    print(f'Wrote {len(fixtures)} confirmed cup fixture(s)')
-if __name__=='__main__': main()
+    years = [datetime.now(JST).year, datetime.now(JST).year + 1]
+    fixtures = []
+    failures = []
+    for year in years:
+        try:
+            url = URL_TEMPLATE.format(year=year)
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (compatible; 3team-calendar/1.0)'})
+            with urllib.request.urlopen(req, timeout=30) as res:
+                html = res.read(5_000_000).decode('utf-8', 'replace')
+            parser = TableReader()
+            parser.feed(html)
+            if len(parser.rows) < 5:
+                raise RuntimeError('Official table not found')
+            found = parse(parser.rows)
+            print(f'{year}: {len(found)} future cup fixture(s) parsed')
+            fixtures.extend(found)
+        except Exception as exc:
+            failures.append(f'{year}: {type(exc).__name__}: {exc}')
+    for message in failures:
+        print('WARNING:', message)
+    if not fixtures:
+        raise RuntimeError('No confirmed future cup fixtures parsed; existing JSON preserved')
+    unique = {(e['date'], e['comp'], e['opp']): e for e in fixtures}
+    fixtures = sorted(unique.values(), key=lambda e: (e['date'], e['time']))
+    OUT.write_text(json.dumps(fixtures, ensure_ascii=False, indent=2) + '\\n', encoding='utf-8')
+    print(f'Wrote {len(fixtures)} confirmed future cup fixture(s)')
+
+if __name__ == '__main__':
+    main()
