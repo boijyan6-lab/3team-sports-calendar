@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>3チーム観戦カレンダー</title>
+<style>
+body{margin:0;background:#f5f7fa;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif}
+.wrap{max-width:820px;margin:auto;padding:18px 13px 40px}h1{font-size:24px;margin:3px 0}.sub{font-size:12px;color:#6b7280;margin-bottom:14px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}button{border:0;border-radius:11px;padding:10px 12px;font-weight:700;background:#111827;color:white}
+button.secondary{background:#fff;color:#111827;border:1px solid #d1d5db}.filters{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 16px}
+.toolbar button.activeView{background:#111827;color:#fff;border-color:#111827}
+.filter{background:#e5e7eb;color:#111827}.filter.on{background:#111827;color:white}
+.month{font-size:18px;font-weight:800;margin:22px 0 8px}.card{background:white;border:1px solid #e5e7eb;border-radius:16px;padding:13px 14px;margin:8px 0;box-shadow:0 5px 18px rgba(0,0,0,.04)}
+.card[data-team="urawa"]{border-left:5px solid #dc2626}.card[data-team="hachinohe"]{border-left:5px solid #15803d}.card[data-team="yakult"]{border-left:5px solid #2563eb}
+.card[data-team="urawa"] .team{background:#fee2e2;color:#991b1b}.card[data-team="hachinohe"] .team{background:#dcfce7;color:#166534}.card[data-team="yakult"] .team{background:#dbeafe;color:#1e40af}
+.filter[data-team="urawa"]{background:#fee2e2;color:#991b1b}.filter[data-team="hachinohe"]{background:#dcfce7;color:#166534}.filter[data-team="yakult"]{background:#dbeafe;color:#1e40af}.filter.on[data-team="urawa"]{background:#dc2626;color:white}.filter.on[data-team="hachinohe"]{background:#15803d;color:white}.filter.on[data-team="yakult"]{background:#2563eb;color:white}
+.card.today{border:2px solid #f59e0b;background:#fffbeb;box-shadow:0 7px 22px rgba(245,158,11,.18)}
+.todayBadge{display:inline-block;margin-left:7px;padding:2px 7px;border-radius:999px;background:#f59e0b;color:#fff;font-size:11px;font-weight:900;vertical-align:2px}
+.row{display:flex;justify-content:space-between;gap:10px}.date{font-weight:800}.team{font-size:12px;font-weight:800;padding:3px 7px;background:#f3f4f6;border-radius:8px}
+.title{font-size:17px;font-weight:800;margin-top:7px}.meta{font-size:12px;color:#6b7280;margin-top:5px}.cond{color:#b54708}
+.notice{font-size:12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:10px 12px;margin:10px 0;line-height:1.5}
+#checkPanel{display:none;background:white;border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:12px 0;font-size:13px;line-height:1.55}
+.ok{color:#067647}.warn{color:#b54708}a{color:inherit}
+</style></head>
+<body><div class="wrap">
+<h1>ヤクルト・浦和・八戸 観戦カレンダー</h1>
+<div class="sub">今日以降を初期表示・日程更新：2026/10/25</div>
+<div class="toolbar">
+<button id="checkBtn">最新情報を確認</button>
+<button class="secondary activeView" id="todayBtn">今日以降だけ</button>
+<button class="secondary" id="allBtn">全件表示</button>
+</div>
+<div class="notice">勝ち上がり後の確定日程と2027年の公式発表を反映する更新版。浦和のルヴァン4回戦（10月28日・名古屋戦）と天皇杯4回戦への進出を反映。2027年の浦和リーグ日程も追加（複数候補日は未確定）。八戸・ヤクルトの2027年分は公式発表を確認でき次第追加。公開サイトの更新には更新ZIPのアップロードが必要です。</div>
+<div id="checkPanel"></div>
+<div class="filters">
+<button class="filter on" data-team="all">全部</button>
+<button class="filter" data-team="yakult">ヤクルト</button>
+<button class="filter" data-team="urawa">浦和</button>
+<button class="filter" data-team="hachinohe">八戸</button>
+</div>
+<div id="list"></div>
+</div>
+<script>
+const initial=[{"date":"2026-09-14","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"広島","ha":"H","watch":"DAZN"},{"date":"2026-09-15","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"広島","ha":"H","watch":"DAZN"},{"date":"2026-09-17","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"DeNA","ha":"H","watch":"DAZN"},{"date":"2026-09-18","time":"13:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"宮崎","ha":"H","watch":"DAZN"},{"date":"2026-09-18","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"DeNA","ha":"A","watch":"DAZN"},{"date":"2026-09-19","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"DeNA","ha":"A","watch":"DAZN"},{"date":"2026-09-19","time":"18:30","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"東京V","ha":"H","watch":"DAZN"},{"date":"2026-09-20","time":"14:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"巨人","ha":"A","watch":"DAZN"},{"date":"2026-09-22","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"阪神","ha":"H","watch":"DAZN"},{"date":"2026-09-23","time":"14:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"阪神","ha":"H","watch":"DAZN"},{"date":"2026-09-25","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"中日","ha":"H","watch":"DAZN"},{"date":"2026-09-26","time":"17:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"磐田","ha":"A","watch":"DAZN"},{"date":"2026-09-26","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"中日","ha":"H","watch":"DAZN"},{"date":"2026-09-27","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"巨人","ha":"A","watch":"DAZN"},{"date":"2026-09-29","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"阪神","ha":"A","watch":"DAZN"},{"date":"2026-09-29","time":"19:00","team":"urawa","teamLabel":"浦和","comp":"ルヴァン2回戦","opp":"富山","ha":"A","watch":"サッカーLIVE"},{"date":"2026-09-30","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"阪神","ha":"A","watch":"DAZN"},{"date":"2026-10-02","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"巨人","ha":"H","watch":"DAZN"},{"date":"2026-10-03","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"中日","ha":"H","watch":"DAZN"},{"date":"2026-10-04","time":"13:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"横浜FC","ha":"H","watch":"DAZN"},{"date":"2026-10-04","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"広島","ha":"H","watch":"DAZN"},{"date":"2026-10-05","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ予備日","opp":"広島","ha":"H","watch":"DAZN","conditional":true,"conditionLabel":"※10/4の試合が中止の場合のみ開催"},{"date":"2026-10-07","time":"18:00","team":"urawa","teamLabel":"浦和","comp":"天皇杯3回戦","opp":"RB大宮","ha":"-","watch":"サッカーLIVE"},{"date":"2026-10-08","time":"18:00","team":"yakult","teamLabel":"ヤクルト","comp":"セ・リーグ","opp":"阪神","ha":"A","watch":"DAZN","venue":"甲子園"},{"date":"2026-10-10","time":"14:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"大宮","ha":"A","watch":"DAZN"},{"date":"2026-10-10","time":"15:00","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"FC東京","ha":"A","watch":"DAZN"},{"date":"2026-10-14","time":"18:30","team":"urawa","teamLabel":"浦和","comp":"ルヴァン3回戦","opp":"横浜FC","ha":"A","watch":"フジテレビNEXT(録)・スカパー！・スカパー！動画ストア","conditional":false,"venue":"ニッパツ三ツ沢球技場"},{"date":"2026-10-17","time":"14:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"今治","ha":"A","watch":"DAZN"},{"date":"2026-10-17","time":"16:00","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"水戸","ha":"A","watch":"DAZN"},{"date":"2026-10-21","time":"19:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"徳島","ha":"A","watch":"DAZN"},{"date":"2026-10-21","time":"19:30","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"千葉","ha":"H","watch":"DAZN"},{"date":"2026-10-25","time":"14:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"鳥栖","ha":"A","watch":"DAZN"},{"date":"2026-10-25","time":"15:00","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"長崎","ha":"H","watch":"DAZN"},{"date":"2026-10-28","time":"19:00","team":"urawa","teamLabel":"浦和","comp":"ルヴァン4回戦","opp":"名古屋","ha":"A","watch":"フジテレビONE・スカパー！・FOD","conditional":false,"venue":"豊田スタジアム"},{"date":"2026-10-31","time":"14:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"山形","ha":"H","watch":"DAZN"},{"date":"2026-10-31","time":"16:00","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"柏","ha":"A","watch":"DAZN"},{"date":"2026-11-03","time":"14:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"大分","ha":"A","watch":"DAZN"},{"date":"2026-11-08","time":"13:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"札幌","ha":"H","watch":"DAZN"},{"date":"2026-11-08","time":"14:00","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"神戸","ha":"A","watch":"DAZN"},{"date":"2026-11-11","time":"","team":"urawa","teamLabel":"浦和","comp":"ルヴァン準々決勝①","opp":"未定","ha":"-","watch":"サッカーLIVE","conditional":true},{"date":"2026-11-15","time":"13:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"いわき","ha":"H","watch":"DAZN"},{"date":"2026-11-15","time":"","team":"urawa","teamLabel":"浦和","comp":"ルヴァン準々決勝②","opp":"未定","ha":"-","watch":"サッカーLIVE","conditional":true},{"date":"2026-11-21","time":"14:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"甲府","ha":"A","watch":"DAZN"},{"date":"2026-11-21","time":"14:00","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"京都","ha":"A","watch":"DAZN"},{"date":"2026-11-25","time":"18:30","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"新潟","ha":"H","watch":"DAZN"},{"date":"2026-11-25","time":"19:30","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"C大阪","ha":"H","watch":"DAZN"},{"date":"2026-11-28","time":"14:00","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"清水","ha":"A","watch":"DAZN"},{"date":"2026-11-29","time":"13:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"藤枝","ha":"H","watch":"DAZN"},{"date":"2026-12-05","time":"14:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"横浜FC","ha":"A","watch":"DAZN"},{"date":"2026-12-05","time":"14:00","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"名古屋","ha":"H","watch":"DAZN"},{"date":"2026-12-09","time":"","team":"urawa","teamLabel":"浦和","comp":"天皇杯4回戦","opp":"未定","ha":"-","watch":"未定","conditional":false,"conditionLabel":""},{"date":"2026-12-13","time":"13:00","team":"hachinohe","teamLabel":"八戸","comp":"J2","opp":"山形","ha":"A","watch":"DAZN"},{"date":"2026-12-13","time":"15:00","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"川崎","ha":"H","watch":"DAZN"},{"date":"2026-12-19","time":"14:30","team":"urawa","teamLabel":"浦和","comp":"J1","opp":"長崎","ha":"A","watch":"DAZN"},{"date":"2026-12-23","time":"","team":"urawa","teamLabel":"浦和","comp":"天皇杯準々決勝","opp":"未定","ha":"-","watch":"未定","conditional":true},{"date":"2026-12-27","time":"","team":"urawa","teamLabel":"浦和","comp":"天皇杯準決勝","opp":"未定","ha":"-","watch":"未定","conditional":true},{"date":"2027-01-01","time":"","team":"urawa","teamLabel":"浦和","comp":"天皇杯決勝","opp":"未定","ha":"-","watch":"未定","conditional":true},{"date":"2027-02-14","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第21節","opp":"東京V","ha":"A","watch":"DAZN"},{"date":"2027-02-20","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第22節","opp":"鹿島","ha":"H","watch":"DAZN","dateEnd":"2027-02-21"},{"date":"2027-02-27","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第23節","opp":"名古屋","ha":"A","watch":"DAZN","dateEnd":"2027-02-28"},{"date":"2027-03-06","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第24節","opp":"川崎","ha":"A","watch":"DAZN","dateEnd":"2027-03-07"},{"date":"2027-03-10","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第25節","opp":"FC東京","ha":"H","watch":"DAZN"},{"date":"2027-03-14","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第26節","opp":"千葉","ha":"A","watch":"DAZN"},{"date":"2027-03-20","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第27節","opp":"横浜FM","ha":"A","watch":"DAZN","dateEnd":"2027-03-21"},{"date":"2027-03-24","time":"","team":"urawa","teamLabel":"浦和","comp":"ルヴァン準決勝①","opp":"未定","ha":"-","watch":"未定","conditional":true},{"date":"2027-03-28","time":"","team":"urawa","teamLabel":"浦和","comp":"ルヴァン準決勝②","opp":"未定","ha":"-","watch":"未定","conditional":true},{"date":"2027-04-03","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第28節","opp":"清水","ha":"H","watch":"DAZN","dateEnd":"2027-04-04"},{"date":"2027-04-10","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第29節","opp":"柏","ha":"H","watch":"DAZN","dateEnd":"2027-04-11"},{"date":"2027-04-17","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第30節","opp":"岡山","ha":"A","watch":"DAZN","dateEnd":"2027-04-18"},{"date":"2027-04-24","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第31節","opp":"水戸","ha":"H","watch":"DAZN","dateEnd":"2027-04-25"},{"date":"2027-04-29","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第32節","opp":"町田","ha":"H","watch":"DAZN"},{"date":"2027-05-03","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第33節","opp":"広島","ha":"A","watch":"DAZN","dateEnd":"2027-05-04"},{"date":"2027-05-09","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第34節","opp":"神戸","ha":"H","watch":"DAZN","note":"ルヴァン決勝進出の場合、開催日変更の可能性あり"},{"date":"2027-05-15","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第35節","opp":"福岡","ha":"H","watch":"DAZN","dateEnd":"2027-05-16"},{"date":"2027-05-22","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第36節","opp":"京都","ha":"H","watch":"DAZN","dateEnd":"2027-05-23"},{"date":"2027-05-29","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第37節","opp":"C大阪","ha":"A","watch":"DAZN","dateEnd":"2027-05-30"},{"date":"2027-06-06","time":"","team":"urawa","teamLabel":"浦和","comp":"J1 第38節","opp":"G大阪","ha":"H","watch":"DAZN"}];
+let team='all', futureOnly=true;
+function fmt(d){const x=new Date(d+'T00:00:00');return `${x.getMonth()+1}/${x.getDate()} (${['日','月','火','水','木','金','土'][x.getDay()]})`}
+function monthKey(d){return d.slice(0,7)}
+function monthTitle(k){const [y,m]=k.split('-');return `${y}年${Number(m)}月`}
+function todayJst(){
+ const parts=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const values=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+ return `${values.year}-${values.month}-${values.day}`;
+}
+function render(){
+ const today=todayJst();
+ let arr=initial.filter(e=>team==='all'||e.team===team);
+ if(futureOnly) arr=arr.filter(e=>e.date>=today);
+ let html='', cur='';
+ for(const e of arr){
+  const mk=monthKey(e.date); if(mk!==cur){cur=mk;html+=`<div class="month">${monthTitle(mk)}</div>`}
+  const isToday=e.date===today;
+  html+=`<div class="card${isToday?' today':''}" data-team="${e.team}"><div class="row"><div class="date">${fmt(e.date)}${e.dateEnd?' または '+fmt(e.dateEnd):''} ${e.time||'時刻未定'}${isToday?'<span class="todayBadge">今日</span>':''}</div><div class="team">${e.teamLabel}</div></div>
+  <div class="title">${e.opp==='未定'?e.comp:`${e.opp}戦`}</div>
+  <div class="meta">${e.comp} ・ ${e.ha==='H'?'ホーム':e.ha==='A'?'アウェイ':'会場条件なし'}${e.venue?'（'+e.venue+'）':''} ・ 視聴: ${e.watch}</div>
+  ${e.note?`<div class="meta cond">${e.note}</div>`:''}
+  ${e.conditional?`<div class="meta cond">${e.conditionLabel||'※勝ち上がった場合'}</div>`:''}</div>`
+ }
+ document.getElementById('list').innerHTML=html||'<div class="card">該当する予定はありません。</div>';
+}
+document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('on'));b.classList.add('on');team=b.dataset.team;render()});
+document.getElementById('todayBtn').onclick=()=>{futureOnly=true;document.getElementById('todayBtn').classList.add('activeView');document.getElementById('allBtn').classList.remove('activeView');render()};
+document.getElementById('allBtn').onclick=()=>{futureOnly=false;document.getElementById('allBtn').classList.add('activeView');document.getElementById('todayBtn').classList.remove('activeView');render()};
+
+async function checkLatest(){
+ const p=document.getElementById('checkPanel'), btn=document.getElementById('checkBtn');
+ p.style.display='block'; p.innerHTML='公式情報を確認中…'; btn.disabled=true;
+ const urls=[
+  ['ヤクルト','https://r.jina.ai/https://www.yakult-swallows.co.jp/game'],
+  ['浦和','https://r.jina.ai/https://www.jleague.jp/club/urawa/day/'],
+  ['八戸','https://r.jina.ai/https://www.jleague.jp/club/hachinohe/']
+ ];
+ let out=[];
+ for(const [name,url] of urls){
+  try{
+   const r=await fetch(url,{cache:'no-store'});
+   if(!r.ok) throw new Error();
+   const t=await r.text();
+   const has2027=/2027\//.test(t)||/2027年/.test(t);
+   out.push(`<div class="ok">✓ ${name}：公式ページ取得成功${has2027?'（2027年表記あり）':''}</div>`);
+  }catch(e){
+   out.push(`<div class="warn">△ ${name}：自動確認できませんでした</div>`);
+  }
+ }
+ p.innerHTML=out.join('')+`<div style="margin-top:8px;color:#6b7280">このボタンは公式ページの取得確認のみです。新しい日程は、更新を依頼いただいた際に公式情報を確認して反映します。公開サイトへの反映は更新ZIPをアップロードしてください。</div>`;
+ btn.disabled=false;
+}
+document.getElementById('checkBtn').onclick=checkLatest;
+render();
+</script></body></html>
