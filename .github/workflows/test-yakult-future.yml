@@ -1,0 +1,15 @@
+name: Test Yakult future start times
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Inspect future start times (read only)
+        run: python scripts/test_yakult_future.py
