@@ -1,6 +1,6 @@
 ## 公式サイトの変更検知
 
-- urawa: https://www.urawa-reds.co.jp/ (schedule-related links changed; 43 links)
+- urawa: https://www.urawa-reds.co.jp/ (schedule-related links changed; 42 links)
 
 ## 取得エラー
 
