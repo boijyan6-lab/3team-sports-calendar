@@ -1,6 +1,6 @@
 ## 公式サイトの変更検知
 
-- hachinohe: https://vanraure.net/ (schedule-related links changed; 5 links)
+- urawa: https://www.urawa-reds.co.jp/ (schedule-related links changed; 43 links)
 
 ## 取得エラー
 
