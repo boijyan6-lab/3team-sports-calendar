@@ -1,6 +1,6 @@
 ## 公式サイトの変更検知
 
-- yakult: https://www.yakult-swallows.co.jp/ (schedule-related links changed; 7 links)
+変更検知なし（または初回実行）。
 
 ## 取得エラー
 
