@@ -4,6 +4,6 @@
 
 ## 取得エラー
 
-なし
+- hachinohe: URLError: <urlopen error timed out>
 
 **注意:** これは公式サイトのリンク変更検知であり、試合日程の自動更新ではありません。
