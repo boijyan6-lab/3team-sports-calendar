@@ -1,9 +1,9 @@
 ## 公式サイトの変更検知
 
-変更検知なし（または初回実行）。
+- urawa: https://www.urawa-reds.co.jp/ (schedule-related links changed; 43 links)
 
 ## 取得エラー
 
-- hachinohe: URLError: <urlopen error timed out>
+なし
 
 **注意:** これは公式サイトのリンク変更検知であり、試合日程の自動更新ではありません。
